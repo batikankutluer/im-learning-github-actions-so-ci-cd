@@ -1,4 +1,4 @@
-name: Monorepo CI/CD Pipeline
+name: Frontend - Backend > Test & Merge
 
 on:
   pull_request:
