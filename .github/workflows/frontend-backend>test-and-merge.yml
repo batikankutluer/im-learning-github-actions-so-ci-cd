@@ -45,6 +45,7 @@ jobs:
   merge-backend:
     needs: test-backend
     runs-on: ubuntu-latest
+    permissions: write-all
     
     if: github.event_name == 'pull_request'
     
@@ -73,7 +74,8 @@ jobs:
   merge-frontend:
     needs: test-frontend
     runs-on: ubuntu-latest
-    
+    permissions: write-all
+
     if: github.event_name == 'pull_request'
     
     steps:
