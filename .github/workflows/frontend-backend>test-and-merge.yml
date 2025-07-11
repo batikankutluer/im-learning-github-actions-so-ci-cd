@@ -1,0 +1,71 @@
+name: Monorepo CI/CD Pipeline
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # 1. Adım: Değişiklikleri Tespit Etme İşi ("Hangi Servis Güncellendi?")
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+      # İhtiyaca göre diğer servisleri ekleyebilirsiniz: nginx, redis etc.
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Detect changed services
+        uses: dorny/paths-filter@v3
+        id: filter # Bu adıma bir ID veriyoruz ki çıktılarına erişebilelim
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+
+  # 2. Adım: Backend için Test, Build ve Deploy İşi
+  test-backend:
+    needs: changes # Bu işin çalışması için 'changes' işinin bitmesi gerekir
+    if: needs.changes.outputs.backend == 'true' # Sadece backend dosyaları değiştiyse çalışır!
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Backend Test
+        run: |
+          echo "Running backend tests..."
+  merge-backend:
+    needs: test-backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge Backend PR
+        run: |
+          echo "Merging backend..."
+          
+
+  # 3. Adım: Frontend için Test, Build ve Deploy İşi
+  test-frontend:
+    needs: changes # Bu işin çalışması için 'changes' işinin bitmesi gerekir
+    if: needs.changes.outputs.frontend == 'true' # Sadece frontend dosyaları değiştiyse çalışır!
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Frontend Test
+        run: |
+          echo "Running frontend tests..."
+  merge-frontend:
+    needs: test-frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge Backend PR
+        run: |
+          echo "Merging backend..."
+          
