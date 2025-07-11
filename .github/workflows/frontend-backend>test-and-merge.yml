@@ -39,15 +39,22 @@ jobs:
         
       - name: Backend Test
         run: |
-          echo "Running backend tests..."
+          cd ./backend
+          npm ci
+          npm run test
   merge-backend:
     needs: test-backend
     runs-on: ubuntu-latest
+    
+    if: github.event_name == 'pull_request'
+    
     steps:
-      - name: Merge Backend PR
+      - name: Merge Backend Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
         run: |
-          echo "Merging backend..."
-          
+          gh pr merge --auto --merge "$PR_URL" 
 
   # 3. Adım: Frontend için Test, Build ve Deploy İşi
   test-frontend:
@@ -60,12 +67,19 @@ jobs:
 
       - name: Frontend Test
         run: |
-          echo "Running frontend tests..."
+          cd ./frontend
+          npm ci
+          npm run test
   merge-frontend:
     needs: test-frontend
     runs-on: ubuntu-latest
+    
+    if: github.event_name == 'pull_request'
+    
     steps:
-      - name: Merge Backend PR
+      - name: Merge Frontend Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
         run: |
-          echo "Merging backend..."
-          
+          gh pr merge --auto --merge "$PR_URL"
