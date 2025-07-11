@@ -1,65 +1,78 @@
-# This is a basic workflow to help you get started with Actions
+name: Monorepo CI/CD Pipeline
 
-name: CI
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on pull request events but only for the "main" branch
+  push:
+    branches:
+      - main
+      - develop
   pull_request:
-    branches: [ "main" ]
-    types:
-      - opened
-      - synchronize
-      - reopened
+    branches:
+      - main
+      - develop
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# Grant permissions for the GITHUB_TOKEN to merge pull requests
-permissions:
-  pull-requests: write
-  contents: write
-
-# Ensures that only one instance of this workflow runs at a time.
-# Subsequent runs for the same branch will be queued.
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  # 1. Adım: Değişiklikleri Tespit Etme İşi ("Hangi Servis Güncellendi?")
+  changes:
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+      # İhtiyaca göre diğer servisleri ekleyebilirsiniz: nginx, redis etc.
+      
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Building the project...
+      - name: Detect changed services
+        uses: dorny/paths-filter@v3
+        id: filter # Bu adıma bir ID veriyoruz ki çıktılarına erişebilelim
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
 
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
-        run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
-
-  # This job will run only after the 'build' job is successful
-  merge:
-    needs: build
+  # 2. Adım: Backend için Test, Build ve Deploy İşi
+  build-and-deploy-backend:
+    needs: changes # Bu işin çalışması için 'changes' işinin bitmesi gerekir
+    if: needs.changes.outputs.backend == 'true' # Sadece backend dosyaları değiştiyse çalışır!
     runs-on: ubuntu-latest
-    
-    # This job should only run for pull request events
-    if: github.event_name == 'pull_request'
-    
     steps:
-      - name: Merge Pull Request
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Backend Test
         run: |
-          gh pr merge --auto --merge "$PR_URL"
+          echo "Running backend tests..."
+          
+      - name: Build Backend Docker Image
+        run: |
+          echo "Building backend Docker image..."
+          
+      - name: Deploy Backend
+        run: |
+          echo "Deploying backend..."
+          
+
+  # 3. Adım: Frontend için Test, Build ve Deploy İşi
+  build-and-deploy-frontend:
+    needs: changes # Bu işin çalışması için 'changes' işinin bitmesi gerekir
+    if: needs.changes.outputs.frontend == 'true' # Sadece frontend dosyaları değiştiyse çalışır!
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Frontend Test
+        run: |
+          echo "Running frontend tests..."
+          
+      - name: Build Frontend Docker Image
+        run: |
+          echo "Building frontend Docker image..."
+          
+      - name: Deploy Frontend
+        run: |
+          echo "Deploying frontend..."
+          
