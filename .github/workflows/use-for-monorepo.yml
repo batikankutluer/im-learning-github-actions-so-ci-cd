@@ -1,14 +1,9 @@
 name: Monorepo CI/CD Pipeline
 
 on:
-  push:
-    branches:
-      - main
-      - develop
   pull_request:
     branches:
       - main
-      - develop
 
 jobs:
   # 1. Adım: Değişiklikleri Tespit Etme İşi ("Hangi Servis Güncellendi?")
