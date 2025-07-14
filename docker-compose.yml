@@ -1,0 +1,24 @@
+# Ana orchestration dosyası
+# Her servis kendi klasöründe konfigüre edilir
+
+services:
+  # Frontend servisi
+  frontend:
+    extends:
+      file: ./frontend/frontend-compose.yml
+      service: frontend
+
+  # Backend servisi
+  backend:
+    extends:
+      file: ./backend/backend-compose.yml
+      service: backend
+    
+# Ortak network
+networks:
+  app-network:
+    driver: bridge
+
+# Volumes tanımlaması
+volumes:
+  redis_data:
