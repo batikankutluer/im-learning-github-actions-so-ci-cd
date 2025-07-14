@@ -1,0 +1,89 @@
+name: Upgrade Frontend & Backend on Main Merge
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # 1. Değişiklikleri Tespit Etme Job'ı
+  # Bu job, hangi klasörlerde değişiklik olduğunu belirler ve sonucunu diğer job'lara aktarır.
+  changes:
+    runs-on: ubuntu-latest
+    # outputs: Bu job'ın çıktısını diğer job'larda kullanabilmek için tanımlıyoruz.
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.for_filter.outputs.backend }}
+    steps:
+      # Önce kodu indirmeliyiz
+      - uses: actions/checkout@v4
+        # Değişiklikleri doğru tespit etmek için tam git geçmişini çekiyoruz
+        with:
+          fetch-depth: 0
+
+      # Değişiklik olan yolları (paths) filtreleyen action
+      - uses: dorny/paths-filter@v3
+        id: filter # Bu adıma bir ID veriyoruz ki çıktılarını kullanabilelim
+        with:
+          filters: |
+            # 'frontend' adında bir filtre tanımlıyoruz.
+            # Aşağıdaki yollardan herhangi birinde değişiklik olursa 'frontend' çıktısı 'true' olur.
+            frontend:
+              - 'frontend/**'
+
+            # 'backend' adında bir filtre tanımlıyoruz.
+            backend:
+              - 'backend/**'
+
+  # 2. Frontend Deployment Job'ı
+  deploy-frontend:
+      needs: changes # 'changes' job'ının bitmesini bekler
+      if: needs.changes.outputs.frontend == 'true' # 'changes' job'ının 'frontend' çıktısı 'true' ise çalışır
+      runs-on: ubuntu-latest
+      
+      steps:
+        - name: Sunucuya bağlan ve deploy et
+          # Popüler ve güvenli SSH action'ını kullanıyoruz
+          uses: appleboy/ssh-action@master
+          with:
+            # Sunucu IP adresi. GitHub Secrets'tan alınacak.
+            host: ${{ secrets.SERVER_IP }}
+            # Sunucuya bağlanılacak kullanıcı adı.
+            username: ${{ secrets.SERVER_USERNAME }}
+            # Sunucuya bağlanmak için kullanılacak SSH private key.
+            key: ${{ secrets.SSH_PRIVATE_KEY }}
+            # Sunucuya bağlandıktan sonra çalıştırılacak komutlar.
+            # Bu komutları kendi projenize göre düzenleyin.
+            script: |
+              echo "Frontend deploy işlemi başlıyor..."
+              cd /home/ubuntu/project/production/frontend  # Projenizin sunucudaki konumu
+              git pull origin main                         # En güncel kodu çek
+              docker compose up frontend -d --build        # Servisi yeniden başlat (veya nginx, docker vs.)
+              echo "Frontend başarıyla deploy edildi."
+
+  # 3. Backend Deployment Job'ı
+  # Bu job, SADECE backend dosyaları değiştiyse çalışır.
+  deploy-backend:
+      needs: changes # 'changes' job'ının bitmesini bekler
+      if: needs.changes.outputs.backend == 'true' # 'changes' job'ının 'backend' çıktısı 'true' ise çalışır
+      runs-on: ubuntu-latest
+      
+      steps:
+        - name: Sunucuya bağlan ve deploy et
+          # Popüler ve güvenli SSH action'ını kullanıyoruz
+          uses: appleboy/ssh-action@master
+          with:
+            # Sunucu IP adresi. GitHub Secrets'tan alınacak.
+            host: ${{ secrets.SERVER_IP }}
+            # Sunucuya bağlanılacak kullanıcı adı.
+            username: ${{ secrets.SERVER_USERNAME }}
+            # Sunucuya bağlanmak için kullanılacak SSH private key.
+            key: ${{ secrets.SSH_PRIVATE_KEY }}
+            # Sunucuya bağlandıktan sonra çalıştırılacak komutlar.
+            # Bu komutları kendi projenize göre düzenleyin.
+            script: |
+              echo "Backend deploy işlemi başlıyor..."
+              cd /home/ubuntu/project/production/backend  # Projenizin sunucudaki konumu
+              git pull origin main                        # En güncel kodu çek
+              docker compose up backend -d --build        # Servisi yeniden başlat (veya nginx, docker vs.)
+              echo "Backend başarıyla deploy edildi."
