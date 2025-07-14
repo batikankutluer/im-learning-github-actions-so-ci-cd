@@ -40,7 +40,7 @@ jobs:
       - name: Backend Test
         run: |
           cd ./backend
-          npm ci
+          npm install
           npm run test
   merge-backend:
     needs: test-backend
@@ -69,7 +69,7 @@ jobs:
       - name: Frontend Test
         run: |
           cd ./frontend
-          npm ci
+          npm install
           npm run test
   merge-frontend:
     needs: test-frontend
