@@ -12,6 +12,7 @@ services:
       service: frontend-prod
     environment:
       <<: *common-variables
+      NODE_ENV: production
     profiles:
       - prod 
 
@@ -33,6 +34,7 @@ services:
       service: backend-prod
     environment:
       <<: *common-variables
+      NODE_ENV: production
     profiles:
       - prod 
 
@@ -50,8 +52,14 @@ services:
 networks:
   app-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/16
   dev-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.31.0.0/16
 
 # Volumes tanımlaması
 volumes:
