@@ -1,5 +1,8 @@
 # Ana orchestration dosyası
-# Her servis kendi klasöründe konfigüre edilir
+# NODE_ENV ile production ve development ortamlarını destekler
+
+x-common-variables: &common-variables
+  NODE_ENV: ${NODE_ENV:-production}
 
 services:
   # Frontend servisi
@@ -7,13 +10,48 @@ services:
     extends:
       file: ./frontend/frontend-compose.yml
       service: frontend
+    environment:
+      <<: *common-variables
+    profiles:
+      - prod
+      - dev
 
-  # Backend servisi
+  # Backend servisi  
   backend:
     extends:
       file: ./backend/backend-compose.yml
       service: backend
-    
+    environment:
+      <<: *common-variables
+    profiles:
+      - prod
+      - dev
+
+  # Development için ek servisler
+  frontend-dev:
+    extends:
+      file: ./frontend/frontend-compose.yml
+      service: frontend-dev
+    environment:
+      <<: *common-variables
+      NODE_ENV: development
+    profiles:
+      - dev
+    ports:
+      - "3000:3000"
+
+  backend-dev:
+    extends:
+      file: ./backend/backend-compose.yml
+      service: backend-dev
+    environment:
+      <<: *common-variables
+      NODE_ENV: development
+    profiles:
+      - dev
+    ports:
+      - "8000:8000"
+
 # Ortak network
 networks:
   app-network:

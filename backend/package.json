@@ -3,7 +3,8 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
-  "scripts": { 
+  "scripts": {
+    "test": "echo 'yes'"
   },
   "devDependencies": {
     "@types/bun": "latest"

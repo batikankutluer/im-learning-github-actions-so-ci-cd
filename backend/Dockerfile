@@ -4,11 +4,15 @@ FROM oven/bun:1 AS base
 # Çalışma dizinini ayarla
 WORKDIR /app
 
+# NODE_ENV'i build argument olarak al (default: production)
+ARG NODE_ENV=production
+ENV NODE_ENV=${NODE_ENV}
+
 # Package dosyalarını kopyala
 COPY package.json bun.lock* ./
 
-# Bağımlılıkları kur
-RUN bun install --frozen-lockfile
+# NODE_ENV'e göre bağımlılıkları kur
+RUN if [ "$NODE_ENV" = "production" ] ; then bun install --production --frozen-lockfile ; else bun install --frozen-lockfile ; fi
 
 # Kaynak kodları kopyala
 COPY . .
@@ -17,7 +21,9 @@ COPY . .
 FROM oven/bun:1 AS runner
 WORKDIR /app
 
-ENV NODE_ENV=production
+# NODE_ENV'i build argument olarak al (default: production)
+ARG NODE_ENV=production
+ENV NODE_ENV=${NODE_ENV}
 
 # Sistem kullanıcısı oluştur
 RUN addgroup --system --gid 1001 bunjs
@@ -26,8 +32,8 @@ RUN adduser --system --uid 1001 bunjs
 # Package dosyalarını kopyala
 COPY package.json bun.lock* ./
 
-# Production bağımlılıklarını kur
-RUN bun install --production --frozen-lockfile
+# NODE_ENV'e göre bağımlılıkları kur
+RUN if [ "$NODE_ENV" = "production" ] ; then bun install --production --frozen-lockfile ; else bun install --frozen-lockfile ; fi
 
 # Kaynak kodları kopyala
 COPY index.ts ./

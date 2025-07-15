@@ -57,8 +57,7 @@ node_modules/
 *.tsbuildinfo
 next-env.d.ts
 
-# Docker dosyaları
-Dockerfile*
+# Docker dosyaları 
 .dockerignore
 docker-compose*
 
