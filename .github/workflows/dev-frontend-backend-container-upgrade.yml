@@ -57,7 +57,7 @@ jobs:
             script: |
               echo "Frontend deploy işlemi başlıyor..."
               cd /home/ubuntu/project/development  # Projenizin sunucudaki konumu
-              git pull origin main                         # En güncel kodu çek
+              git pull origin development          # En güncel kodu çek
               docker compose up frontend -d --build        # Servisi yeniden başlat (veya nginx, docker vs.)
               echo "Frontend başarıyla deploy edildi."
 
@@ -83,7 +83,7 @@ jobs:
             # Bu komutları kendi projenize göre düzenleyin.
             script: |
               echo "Backend deploy işlemi başlıyor..."
-              cd /home/ubuntu/project/development  # Projenizin sunucudaki konumu
-              git pull origin main                        # En güncel kodu çek
+              cd /home/ubuntu/project/development         # Projenizin sunucudaki konumu
+              git pull origin development                 # En güncel kodu çek
               docker compose up backend -d --build        # Servisi yeniden başlat (veya nginx, docker vs.)
               echo "Backend başarıyla deploy edildi."
