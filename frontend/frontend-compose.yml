@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  frontend:
+  frontend-prod:
     build: .
     ports:
       - "3000:3000"
@@ -10,7 +10,25 @@ services:
     restart: unless-stopped
     networks:
       - app-network
+    profiles:
+      - prod
+  frontend-dev:
+    build: 
+      context: .
+      args:
+        NODE_ENV: development
+    ports:
+      - "4000:3000"
+    environment:
+      - NODE_ENV=development
+    restart: unless-stopped
+    networks:
+      - dev-network
+    profiles:
+      - dev
 
 networks:
   app-network:
+    external: true
+  dev-network:
     external: true

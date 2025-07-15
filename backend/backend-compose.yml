@@ -1,16 +1,34 @@
 version: "3.8"
 
 services:
-  backend:
+  backend-prod:
     build: .
     ports:
-      - "5000:5000"
+      - "3001:9000"
     environment:
       - NODE_ENV=production
     restart: unless-stopped
     networks:
       - app-network
+    profiles:
+      - prod
+  backend-dev:
+    build: 
+      context: .
+      args:
+        NODE_ENV: development
+    ports:
+      - "4001:9000"
+    environment:
+      - NODE_ENV=development
+    restart: unless-stopped
+    networks:
+      - dev-network
+    profiles:
+      - dev
 
 networks:
   app-network:
+    external: true
+  dev-network:
     external: true
