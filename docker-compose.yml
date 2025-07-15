@@ -6,26 +6,14 @@ x-common-variables: &common-variables
 
 services:
   # Frontend servisi
-  frontend:
+  frontend-prod:
     extends:
       file: ./frontend/frontend-compose.yml
-      service: frontend
+      service: frontend-prod
     environment:
       <<: *common-variables
     profiles:
-      - prod
-      - dev
-
-  # Backend servisi  
-  backend:
-    extends:
-      file: ./backend/backend-compose.yml
-      service: backend
-    environment:
-      <<: *common-variables
-    profiles:
-      - prod
-      - dev
+      - prod 
 
   # Development için ek servisler
   frontend-dev:
@@ -36,9 +24,17 @@ services:
       <<: *common-variables
       NODE_ENV: development
     profiles:
-      - dev
-    ports:
-      - "3000:3000"
+      - dev 
+
+  # Backend servisi  
+  backend-prod:
+    extends:
+      file: ./backend/backend-compose.yml
+      service: backend-prod
+    environment:
+      <<: *common-variables
+    profiles:
+      - prod 
 
   backend-dev:
     extends:
@@ -48,13 +44,13 @@ services:
       <<: *common-variables
       NODE_ENV: development
     profiles:
-      - dev
-    ports:
-      - "8000:8000"
+      - dev 
 
 # Ortak network
 networks:
   app-network:
+    driver: bridge
+  dev-network:
     driver: bridge
 
 # Volumes tanımlaması

@@ -21,11 +21,14 @@ FROM base AS builder
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 
-COPY --from=deps /app/node_modules ./node_modules
+RUN bun install --frozen-lockfile
 COPY . .
 
-# TypeScript tiplerini oluştur
-RUN bun run build
+# Public klasörünü oluştur (yoksa)
+RUN mkdir -p ./public
+
+# NODE_ENV'e göre build veya dev modunu ayarla
+RUN if [ "$NODE_ENV" = "development" ] ; then echo "Development mode - skipping build" ; else bun run build ; fi
 
 # Production image
 FROM base AS runner
@@ -36,16 +39,25 @@ ENV NODE_ENV=${NODE_ENV}
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Next.js dosyalarını kopyala
+# Public klasörünü oluştur ve kopyala
+RUN mkdir -p ./public
 COPY --from=builder /app/public ./public
 
 # Statik dosyalar için doğru izinleri ayarla
 RUN mkdir .next
 RUN chown nextjs:nodejs .next
 
-# Build çıktılarını kopyala
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Development için kaynak kodları kopyala, production için build çıktılarını kopyala
+RUN if [ "$NODE_ENV" = "development" ] ; then \
+      echo "Development mode" ; \
+    else \
+      echo "Production mode" ; \
+    fi
+
+COPY --from=builder --chown=nextjs:nodejs /app ./
+
+# Development modunda tüm dosyalara yazma izni ver
+RUN chmod -R 777 /app
 
 USER nextjs
 
@@ -54,4 +66,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["bun", "server.js"] 
+# NODE_ENV'e göre farklı komut çalıştır
+CMD if [ "$NODE_ENV" = "development" ] ; then bun run dev --turbopack ; else node server.js ; fi 
